@@ -830,6 +830,47 @@ body {
     .about-stats {
         grid-template-columns: repeat(2, 1fr);
     }
+
+    /* 移动端性能优化 */
+    .card,
+    .skill-category,
+    .timeline-content,
+    .contact-item,
+    .contact-message,
+    .stat,
+    .about {
+        backdrop-filter: none !important;
+        -webkit-backdrop-filter: none !important;
+    }
+
+    /* 简化阴影效果 */
+    .card {
+        box-shadow: 0 5px 15px var(--shadow-color);
+    }
+
+    .card:hover {
+        box-shadow: 0 8px 20px var(--shadow-color);
+        transform: translateY(-2px);
+    }
+
+    /* 简化动画 */
+    .skill-tag {
+        animation: none;
+    }
+
+    .scroll-indicator {
+        animation: none;
+        opacity: 0.7;
+    }
+
+    /* 简化渐变背景 */
+    body {
+        background: linear-gradient(to bottom, #4a6ee0, #6a4bc2);
+    }
+
+    .hero::before {
+        opacity: 0.7;
+    }
 }
 
 @media (max-width: 480px) {

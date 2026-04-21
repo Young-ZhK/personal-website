@@ -1,5 +1,30 @@
+// 移动端检测
+function isMobileDevice() {
+    return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ||
+        (window.innerWidth <= 768);
+}
+
+// 性能优化：延迟加载非关键资源
+function lazyLoadResources() {
+    // 延迟加载Font Awesome（如果可用）
+    if (isMobileDevice()) {
+        // 移动端延迟加载外部资源
+        const loadFontAwesome = function() {
+            const link = document.createElement('link');
+            link.rel = 'stylesheet';
+            link.href = 'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css';
+            document.head.appendChild(link);
+        };
+
+        // 延迟1秒加载，让关键内容先显示
+        setTimeout(loadFontAwesome, 1000);
+    }
+}
+
 // 等待DOM加载完成
 document.addEventListener('DOMContentLoaded', function() {
+    // 延迟加载非关键资源
+    lazyLoadResources();
     // 初始化功能
     initSmoothScroll();
     initMobileMenu();

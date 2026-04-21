@@ -20,7 +20,7 @@
     --border-color: rgba(0, 0, 0, 0.08);
 
     /* 字体 */
-    --font-family: 'Noto Sans SC', sans-serif;
+    --font-family: 'PingFang SC', 'Microsoft YaHei', 'Hiragino Sans GB', 'WenQuanYi Micro Hei', sans-serif;
     --font-size-base: 16px;
     --font-size-sm: 0.875rem;
     --font-size-lg: 1.125rem;

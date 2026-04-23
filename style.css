@@ -902,6 +902,100 @@ body {
     }
 }
 
+/* 奖项展示区域 - 平铺布局 */
+.awards {
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.awards-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: var(--spacing-lg);
+    max-width: 1200px;
+    margin: var(--spacing-xl) auto 0;
+    padding: 0 var(--spacing-md);
+}
+
+
+.award-item {
+    position: relative;
+    width: 100%;
+    height: 240px;
+    transition: transform var(--transition-normal);
+}
+
+.award-card {
+    width: 100%;
+    height: 100%;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+    overflow: hidden;
+    border: 6px solid white;
+    position: relative;
+}
+
+.award-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
+}
+
+
+.award-image {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    display: block;
+    background-color: white;
+}
+
+
+
+
+
+
+
+
+
+/* 响应式设计 - 奖项区域 */
+@media (max-width: 1024px) {
+    .awards-grid {
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: var(--spacing-md);
+    }
+
+    .award-item {
+        height: 210px;
+    }
+}
+
+@media (max-width: 768px) {
+    .awards-grid {
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        gap: var(--spacing-sm);
+    }
+
+    .award-item {
+        height: 188px;
+    }
+
+    .award-card {
+        border: 4px solid white;
+    }
+}
+
+@media (max-width: 480px) {
+    .awards-grid {
+        grid-template-columns: 1fr;
+        max-width: 400px;
+        margin: var(--spacing-lg) auto 0;
+    }
+
+    .award-item {
+        height: 200px;
+    }
+}
+
 /* 打印样式 */
 @media print {
     .navbar, .back-to-top, .scroll-indicator, .btn-copy {

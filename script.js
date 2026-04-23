@@ -34,6 +34,7 @@ document.addEventListener('DOMContentLoaded', function() {
     initCurrentYear();
     initCopyButton();
     initAvatarUpload();
+    initAwardsCarousel();
 });
 
 // 平滑滚动
@@ -199,15 +200,20 @@ function initCurrentYear() {
 
 // 复制按钮功能
 function initCopyButton() {
-    const copyButton = document.querySelector('.btn-copy');
+    const copyButtons = document.querySelectorAll('.btn-copy');
 
-    if (copyButton) {
+    copyButtons.forEach(copyButton => {
         copyButton.addEventListener('click', function() {
-            const emailElement = document.getElementById('email-text');
-            const email = emailElement.textContent;
+            const targetId = this.getAttribute('data-clipboard-target');
+            if (!targetId) return;
+
+            const targetElement = document.querySelector(targetId);
+            if (!targetElement) return;
+
+            const text = targetElement.textContent;
 
             // 使用Clipboard API
-            navigator.clipboard.writeText(email).then(() => {
+            navigator.clipboard.writeText(text).then(() => {
                 // 显示成功反馈
                 const originalText = copyButton.textContent;
                 copyButton.textContent = '已复制!';
@@ -228,7 +234,7 @@ function initCopyButton() {
                 }, 2000);
             });
         });
-    }
+    });
 }
 
 // 头像上传模拟
@@ -345,6 +351,270 @@ if ('IntersectionObserver' in window) {
     document.querySelectorAll('img[data-src]').forEach(img => {
         imageObserver.observe(img);
     });
+}
+
+// 奖项旋转木马
+function initAwardsCarousel() {
+    const carousel = document.querySelector('.awards-carousel');
+    const items = document.querySelectorAll('.award-item');
+    const prevBtn = document.querySelector('.carousel-btn-prev');
+    const nextBtn = document.querySelector('.carousel-btn-next');
+    const dotsContainer = document.querySelector('.carousel-dots');
+
+    console.log('初始化奖项轮播:', {
+        carousel: !!carousel,
+        itemsCount: items.length,
+        prevBtn: !!prevBtn,
+        nextBtn: !!nextBtn,
+        dotsContainer: !!dotsContainer
+    });
+
+    if (!carousel || items.length === 0) {
+        console.warn('奖项轮播初始化失败：缺少必要元素');
+        return;
+    }
+
+    let currentIndex = 0;
+    const totalItems = items.length;
+    let dragOffset = 0; // 水平拖动的偏移量（像素）
+
+    // 动态计算项目宽度和间距
+    function getItemWidth() {
+        const screenWidth = window.innerWidth;
+        if (screenWidth >= 1024) {
+            return 320; // 桌面端
+        } else if (screenWidth >= 768) {
+            return 280; // 平板
+        } else {
+            return 250; // 手机
+        }
+    }
+
+    function getGap() {
+        const screenWidth = window.innerWidth;
+        if (screenWidth >= 1024) {
+            return 40; // 桌面端
+        } else if (screenWidth >= 768) {
+            return 30; // 平板
+        } else {
+            return 20; // 手机
+        }
+    }
+
+    // 计算容器总宽度
+    function getCarouselWidth() {
+        const itemWidth = getItemWidth();
+        const gap = getGap();
+        return totalItems * (itemWidth + gap) - gap;
+    }
+
+    // 创建指示点
+    items.forEach((_, index) => {
+        const dot = document.createElement('button');
+        dot.className = 'carousel-dot';
+        dot.setAttribute('aria-label', `查看奖项 ${index + 1}`);
+        dot.addEventListener('click', () => {
+            console.log(`点击圆点 ${index}`);
+            slideTo(index);
+        });
+        dotsContainer.appendChild(dot);
+        console.log(`创建圆点 ${index}`);
+    });
+
+    const dots = document.querySelectorAll('.carousel-dot');
+
+    // 初始化位置
+    updateCarousel();
+
+    // 上一张/下一张按钮事件
+    prevBtn.addEventListener('click', () => {
+        console.log('点击上一个按钮');
+        slideTo(currentIndex - 1);
+    });
+    nextBtn.addEventListener('click', () => {
+        console.log('点击下一个按钮');
+        slideTo(currentIndex + 1);
+    });
+
+    // 鼠标拖动支持
+    let isDragging = false;
+    let startX = 0;
+    let currentX = 0;
+
+    carousel.addEventListener('mousedown', (e) => {
+        isDragging = true;
+        startX = e.clientX;
+        currentX = startX;
+        carousel.style.transition = 'none';
+    });
+
+    document.addEventListener('mousemove', (e) => {
+        if (!isDragging) return;
+        currentX = e.clientX;
+        const delta = currentX - startX;
+        // 直接使用像素偏移
+        dragOffset = delta;
+        updateCarouselDrag();
+    });
+
+    document.addEventListener('mouseup', () => {
+        if (!isDragging) return;
+        isDragging = false;
+        carousel.style.transition = 'transform var(--transition-normal)';
+
+        // 计算最近的索引
+        const itemWidth = getItemWidth();
+        const threshold = itemWidth / 3; // 拖动超过项目宽度的1/3才切换
+
+        if (dragOffset > threshold) {
+            // 向右拖动，切换到上一个项目（因为拖动方向与滑动方向相反）
+            slideTo(currentIndex - 1);
+        } else if (dragOffset < -threshold) {
+            // 向左拖动，切换到下一个项目
+            slideTo(currentIndex + 1);
+        } else {
+            // 拖动距离不够，回弹到当前项目
+            updateCarousel();
+        }
+    });
+
+    // 触摸屏支持
+    carousel.addEventListener('touchstart', (e) => {
+        isDragging = true;
+        startX = e.touches[0].clientX;
+        currentX = startX;
+        carousel.style.transition = 'none';
+    });
+
+    document.addEventListener('touchmove', (e) => {
+        if (!isDragging) return;
+        currentX = e.touches[0].clientX;
+        const delta = currentX - startX;
+        dragOffset = delta;
+        updateCarouselDrag();
+    });
+
+    document.addEventListener('touchend', () => {
+        if (!isDragging) return;
+        isDragging = false;
+        carousel.style.transition = 'transform var(--transition-normal)';
+
+        // 计算最近的索引
+        const itemWidth = getItemWidth();
+        const threshold = itemWidth / 3; // 拖动超过项目宽度的1/3才切换
+
+        if (dragOffset > threshold) {
+            // 向右拖动，切换到上一个项目（因为拖动方向与滑动方向相反）
+            slideTo(currentIndex - 1);
+        } else if (dragOffset < -threshold) {
+            // 向左拖动，切换到下一个项目
+            slideTo(currentIndex + 1);
+        } else {
+            // 拖动距离不够，回弹到当前项目
+            updateCarousel();
+        }
+    });
+
+    // 键盘导航
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'ArrowLeft') {
+            slideTo(currentIndex - 1);
+        } else if (e.key === 'ArrowRight') {
+            slideTo(currentIndex + 1);
+        }
+    });
+
+    function slideTo(index) {
+        // 处理循环
+        const newIndex = ((index % totalItems) + totalItems) % totalItems;
+        console.log(`滑动到索引: ${index} -> ${newIndex} (当前: ${currentIndex})`);
+        currentIndex = newIndex;
+        updateCarousel();
+    }
+
+    function updateCarousel() {
+        const itemWidth = getItemWidth();
+        const gap = getGap();
+        const containerWidth = document.querySelector('.awards-carousel-container').offsetWidth;
+
+        // 设置容器间距
+        carousel.style.gap = `${gap}px`;
+
+        // 计算使当前项目居中的偏移量
+        // 公式：偏移量 = -(currentIndex * (itemWidth + gap)) + (containerWidth/2) - (itemWidth/2)
+        const offset = -(currentIndex * (itemWidth + gap)) + (containerWidth / 2) - (itemWidth / 2) + dragOffset;
+
+        // 应用偏移到轮播容器
+        carousel.style.transform = `translateX(${offset}px)`;
+
+        // 更新项目状态
+        items.forEach((item, index) => {
+            const itemOffset = ((index - currentIndex + totalItems) % totalItems);
+            item.classList.toggle('active', itemOffset === 0);
+
+            // 根据活动状态调整样式
+            if (itemOffset === 0) {
+                // 当前活动项
+                item.style.zIndex = 20;
+                item.style.opacity = 1;
+                item.style.transform = 'scale(1.15)';
+            } else {
+                // 非活动项
+                item.style.zIndex = 1;
+                item.style.opacity = 0.7;
+                item.style.transform = 'scale(0.9)';
+            }
+        });
+
+        // 更新指示点
+        dots.forEach((dot, index) => {
+            dot.classList.toggle('active', index === currentIndex);
+        });
+
+        // 重置拖动偏移
+        dragOffset = 0;
+    }
+
+    function updateCarouselDrag() {
+        const itemWidth = getItemWidth();
+        const gap = getGap();
+        const containerWidth = document.querySelector('.awards-carousel-container').offsetWidth;
+
+        // 设置容器间距
+        carousel.style.gap = `${gap}px`;
+
+        // 计算拖动时的偏移量
+        const offset = -(currentIndex * (itemWidth + gap)) + (containerWidth / 2) - (itemWidth / 2) + dragOffset;
+
+        // 应用偏移到轮播容器
+        carousel.style.transform = `translateX(${offset}px)`;
+    }
+
+    // 自动轮播（可选）
+    let autoRotateInterval;
+    function startAutoRotate() {
+        if (autoRotateInterval) clearInterval(autoRotateInterval);
+        autoRotateInterval = setInterval(() => {
+            slideTo(currentIndex + 1);
+        }, 5000);
+    }
+
+    function stopAutoRotate() {
+        if (autoRotateInterval) clearInterval(autoRotateInterval);
+    }
+
+    // 当鼠标悬停在轮播区域时停止自动轮播
+    const carouselContainer = document.querySelector('.awards-carousel-container');
+    carouselContainer.addEventListener('mouseenter', stopAutoRotate);
+    carouselContainer.addEventListener('mouseleave', startAutoRotate);
+
+    // 窗口大小改变时更新布局
+    window.addEventListener('resize', () => {
+        updateCarousel();
+    });
+
+    // 开始自动轮播
+    startAutoRotate();
 }
 
 // 错误处理

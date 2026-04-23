@@ -34,7 +34,7 @@ document.addEventListener('DOMContentLoaded', function() {
     initCurrentYear();
     initCopyButton();
     initAvatarUpload();
-    initAwardsCarousel();
+    // initAwardsCarousel(); // 暂时禁用，HTML中没有轮播结构
 });
 
 // 平滑滚动
